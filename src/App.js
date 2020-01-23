@@ -26,6 +26,15 @@ class App extends Component {
     ptLight1.position.set(100,0,250);
     scene.add(ptLight1);
 
+    function onButtonClick(event) {
+      var jelly = new JellyFish();
+      jelly.add();
+      animals.push(jelly);
+    }
+
+    var buttons = document.getElementsByTagName("button");
+    buttons[0].addEventListener("click", onButtonClick, false);
+
     for(var i=0; i<3; i++){
       var jelly = new JellyFish();
       jelly.mesh.position.x = 0;
@@ -41,15 +50,6 @@ class App extends Component {
     document.onmousemove = function(e){
       //uniforms.u_mouse.value.x = e.pageX
       //uniforms.u_mouse.value.y = e.pageY
-    }
-
-    document.onkeypress = function(e){
-      console.log(e.keyCode);
-      if(e.keyCode === 122) {
-        var jelly = new JellyFish();
-        jelly.add();
-        animals.push(jelly);
-      }
     }
 
     function JellyFish() {
