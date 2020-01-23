@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+    <title>Jellyfish</title>
+  </head>
+  <body>
+    <div id="info">Press Z to add a jellyfish!<br>Orbit the camera to follow them and take a closer look.</div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script id="vertexShader" type="x-shader/x-vertex">
+        uniform float u_time;
+        uniform float phase;
+        varying vec3 vPos;
+        varying vec3 vNormal;
+        varying vec2 vUv;
+
+        void main() {
+            vec3 transformed = vec3(position);
+            float dx = position.x;
+            float dy = position.y;
+            float freq = sqrt(dx*dx + dy*dy);
+            float amp = 3.0;
+            float angle = -u_time+0.2*freq+phase;
+            transformed.z += (sin(angle)*amp - 6.0*sin(1.5+0.2*freq));
+
+            vPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+            vNormal = normalMatrix * normalize(vec3(0.0,-amp * 0.2 * freq * cos(angle) + 1.2 * freq * cos(1.5+0.2*freq),1.0));
+            vUv = uv;
+
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( transformed, 1.0 );
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+        uniform float u_time;
+
+        uniform vec3 diffuse;
+        varying vec3 vPos;
+        varying vec3 vNormal;
+
+        struct PointLight {
+          vec3 position;
+          vec3 color;
+        };
+        uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
+
+        uniform float alpha;
+        uniform float color_rot;
+        uniform float hue_adjust;
+
+        varying vec2 vUv;
+
+        const float pi = 3.1415926535897932384626433832795;
+
+        vec2 rotatePointNorm(vec2 pt, float rot)	{
+          vec2 returnMe = pt;
+
+          float r = distance(vec2(0.50), returnMe);
+          float a = atan((returnMe.y-0.5),(returnMe.x-0.5));
+
+          returnMe.x = r * cos(a + 2.0 * pi * rot - pi) + 0.5;
+          returnMe.y = r * sin(a + 2.0 * pi * rot - pi) + 0.5;
+          
+          returnMe = returnMe;
+          
+          return returnMe;
+        }
+
+        float rand(float n) {
+          return fract(sin(n) * 43758.5453123);
+        }
+
+        vec4 pick_color(float r) {
+          vec4 red = vec4(1.0, 0.0, 0.0, 1.0);
+          vec4 blue = vec4(0.0, 1.0, 0.0, 1.0);
+          vec4 green = vec4(0.0, 0.0, 1.0, 1.0);
+          vec4 white = vec4(1.0, 1.0, 1.0, 1.0);
+          vec4 pick = red;
+
+          if(r < 0.25) {
+            pick = red;
+          } else if (r < 0.5) {
+            pick = green;
+          } else if (r < 0.75) {
+            pick = blue;
+          } else {
+            pick = white;
+          }
+
+          return pick;
+        }
+
+        void main() {
+            float rotationAngle = color_rot;
+            float r1 = rand(color_rot);
+            float r2 = rand(color_rot + 1.0);
+            float r3 = rand(color_rot + 2.0);
+            float r4 = rand(color_rot + 3.0);
+
+            vec4 color1 = pick_color(r1);
+            vec4 color2 = pick_color(r2);
+            vec4 color3 = pick_color(r3);
+            vec4 color4 = pick_color(r4);
+
+            vec2 pt = vUv;
+            vec4 dist = vec4(0.0);
+            pt = rotatePointNorm(pt,rotationAngle+0.5);
+            dist.r = max(1.0-distance(vec2(0.0,0.0),pt),0.0);
+            dist.g = max(1.0-distance(vec2(1.0,0.0),pt),0.0);
+            dist.b = max(1.0-distance(vec2(0.0,1.0),pt),0.0);
+            dist.a = max(1.0-distance(vec2(1.0,1.0),pt),0.0);
+            
+            vec4 resultPixel = (color1 * dist.r + color2 * dist.g + color3 * dist.b + color4 * dist.a) / (dist.r + dist.g + dist.b + dist.a);
+            float luma = (resultPixel.r+resultPixel.g+resultPixel.b)/3.0;
+            resultPixel.rgb *= 1.0 / luma;
+
+            vec4 baseColor = resultPixel;
+            baseColor.a = alpha;
+
+            vec4 addedLights = baseColor;
+            for(int l = 0; l < NUM_POINT_LIGHTS; l++) {
+              vec3 adjustedLight = pointLights[l].position + cameraPosition;
+              vec3 lightDirection = normalize(vPos - adjustedLight);
+              addedLights.rgb += clamp(dot(-lightDirection, vNormal), 0.0, 1.0) * pointLights[l].color;
+            }
+            gl_FragColor = addedLights;
+        }
+    </script>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>
