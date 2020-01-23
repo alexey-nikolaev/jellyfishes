@@ -6,6 +6,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 100%;
+  display: block;
+  background-image: linear-gradient(rgb(80,138,247), rgb(7,26,78));
 }
 
 code {
@@ -20,20 +22,17 @@ code {
 }
 
 #info {
-	position: absolute;
 	top: 10px;
-	width: 100%;
 	text-align: center;
-	z-index: 100;
-  display:block;
   color: #fff;
   font-size: 12pt;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   font-weight: bold;
+  padding:0.35em 1.2em;
 }
 
 button{
-  display:inline-block;
+  display: inline;
   padding:0.35em 1.2em;
   border:0.1em solid #FFFFFF;
   margin:0 0.3em 0.3em 0;
@@ -44,18 +43,33 @@ button{
   font-weight: bold;
   font-size: 12pt;
   color:#FFFFFF;
-  background-color: #000000;
-  text-align:center;
+  background-color:rgb(7,26,78);
+  text-align:left;
   transition: all 0.2s;
-  z-index: 101;
   margin: 20px;
+  align-self: flex-start;
+}
+
+#bttn {
+  min-width: 100px;
+  align-content: left;
 }
 
 button:hover{
-  color:#000000;
+  color:rgb(7,26,78);
   background-color:#FFFFFF;
 }
 
-.ui {
+.container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  z-index: 100;
   position: absolute;
+	width: 100%;
+	text-align: center;
+  font-size: 12pt;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-weight: bold;
 }

@@ -14,12 +14,15 @@ class App extends Component {
     //scene.add(pivot);
 
     var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
-    var renderer = new THREE.WebGLRenderer();
+    var renderer = new THREE.WebGLRenderer({ alpha: true });
+
     renderer.setSize( window.innerWidth, window.innerHeight );
     this.mount.appendChild( renderer.domElement );
 
+    renderer.setClearColor(0x000000, 0);
+
     var controls = new OrbitControls( camera, renderer.domElement );
-    camera.position.z = 100;
+    camera.position.z = 50;
     controls.update();
 
     const ptLight1 = new THREE.PointLight(0x0058ab);
@@ -50,6 +53,14 @@ class App extends Component {
     document.onmousemove = function(e){
       //uniforms.u_mouse.value.x = e.pageX
       //uniforms.u_mouse.value.y = e.pageY
+    }
+
+    document.onkeypress = function(e){
+      if(e.keyCode == 122 || e.keyCode == 90){
+        var jelly = new JellyFish();
+        jelly.add();
+        animals.push(jelly);
+      }
     }
 
     function JellyFish() {
